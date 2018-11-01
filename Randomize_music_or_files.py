@@ -149,34 +149,11 @@ if work_path[1:3] == ":\\":
                 for x in range(0, len(files_list)-1):
                     old_name = work_path + "\\" + files_list[x]
                     new_name = work_path + "\\" + files_list[x]
-                    
-                    if files_list[x][0] == '.' and files_list[x][1] == ' ':
-                        new_name = work_path + "\\" + files_list[x][2:]
-                        licznik = licznik + 1
-                    
-                    elif files_list[x][0] == ' ' or files_list[x][0] == '_' or files_list[x][0] == '-' or files_list[x][0] == '.':
-                        new_name = work_path + "\\" + files_list[x][1:]
-                        licznik = licznik + 1
-                    
-                    elif files_list[x][1] == '.' and files_list[x][2] == ' ':
-                        new_name = work_path + "\\" + files_list[x][3:]
-                        licznik = licznik + 1
-                    
-                    elif files_list[x][2] == '.' and files_list[x][3] == ' ':
-                        new_name = work_path + "\\" + files_list[x][4:]
-                        licznik = licznik + 1
-                    
-                    elif files_list[x][3] == '.' and files_list[x][4] == ' ':
-                        new_name = work_path + "\\" + files_list[x][5:]
-                        licznik = licznik + 1
-                    
-                    elif files_list[x][4] == '.' and files_list[x][5] == ' ':
-                        new_name = work_path + "\\" + files_list[x][6:]
-                        licznik = licznik + 1
-                    
-                    elif files_list[x][5] == '.' and files_list[x][6] == ' ':
-                        new_name = work_path + "\\" + files_list[x][7:]
-                        licznik = licznik + 1
+
+                    for j in range(0,len(files_list[x])-4):
+                        if files_list[x][j] == '.' and files_list[x][j+1] == ' ':
+                            new_name = work_path + "\\" + files_list[x][j+2:]
+                            licznik = licznik + 1  
                     else:
                         try:
                             ifint = int(files_list[x][0])
