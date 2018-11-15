@@ -1,0 +1,176 @@
+body, html{
+    background-color: #2c2f33; 
+    margin: 0;
+    padding: 0;
+    color: white;
+    font-size: 1.2em;
+    overflow: hidden;
+    font-family: 'KoHo', sans-serif;
+}
+
+.titlebar {
+    -webkit-app-region: drag;
+  }
+
+.app-title{
+    display: grid;
+    grid-template-columns: 100px auto 100px;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #7289da;
+}
+
+#app-menu{
+    transition: all 200ms;
+    -webkit-app-region: no-drag;
+}
+#app-menu:hover{
+    cursor: pointer;
+    color: #2c2f33;
+}
+
+#app-action{
+    -webkit-app-region: no-drag;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    justify-content: end;
+    /* border: 1px solid #2c2f33; */
+}
+#app-action div{
+    margin: 0px 5px;
+    width: 20px;
+    /* border: 1px solid #2c2f33; */
+    text-align: center;
+    transition: all 200ms;
+}
+#app-action div:hover{
+    cursor: pointer;
+    color: #2c2f33;
+}
+
+div:hover{
+    cursor: default;
+}
+
+.box{
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 250px auto;
+    font-size: 0.8em;
+}
+.left-box{
+    height: 95vh;
+    background: #23272a;
+    border-right: 1px solid rgba(0,0,0.5);
+    overflow-y: auto;
+}
+.right-box{
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto;
+    align-content: start;	
+}
+#current-path{
+    font-size: 1em;
+    background: #23272a;
+    border-bottom: 1px solid rgba(0,0,0,0.5);
+    padding: 10px;
+}
+#file-list{
+    overflow: auto;
+    padding-bottom: 50px; 
+}
+
+.slider-box{
+    position: absolute;
+    width: 250px;
+    height: 100vh;
+    background: #7289da;
+    margin-left: -250px;
+    transition: all 200ms;
+    transition-timing-function: ease-out;
+    border-right: 1px solid #7289da;
+    border-top: 1px solid #23272a;
+}
+.left-tools{
+    display: grid;
+    grid-template-columns: 50% 50%;
+    text-align: center;
+    border-bottom: 1px solid rgba(0,0,0,0.5);
+}
+.left-tools div{
+    padding: 10px 5px;
+    font-size: 1em;
+    transition: all 200ms;
+}
+.left-tools div:hover{
+    cursor: pointer;
+    background: #7289da;
+}
+.app-disk-label{
+    text-align: center;
+    padding: 10px;
+}
+
+ul li{
+    text-decoration: none;
+    list-style-type: square;
+    padding: 3px 10px;
+    border-radius: 5px 0px 0px 5px;
+    transition: all 200ms;
+}
+ul li:hover{
+    background: linear-gradient(45deg, rgba(114,137,218,1),rgba(114,137,218,0));
+    cursor: pointer;
+}
+hr{
+    border: none;
+    border-top: 1px solid rgba(0,0,0,0.5);
+  }
+
+.refresh{
+    transition: all .2s;
+}
+.refresh:hover{
+    color: #7289da;
+    cursor: pointer;
+}
+
+.slider-button{
+    display: grid;
+    grid-template-columns: 25% auto;
+    transition: all .2s;
+    border-bottom: 1px solid #23272a;
+}
+.slider-button div:last-child{
+    text-align: left;
+}
+.slider-button div{
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    justify-content: center;
+}
+.slider-button:hover{
+    background: #23272a;
+    cursor: pointer;
+}
+
+#info-slide{
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    z-index: 2;
+}
+.info-item-, .info-item-error{
+    opacity: 0;
+    background: #7289da;
+    margin-bottom: 5px;
+    margin-right: 10px;
+    padding: 10px 20px;
+    min-width: 190px;
+}
+.info-item-error{
+    background: orange;
+}
