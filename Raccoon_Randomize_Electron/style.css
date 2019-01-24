@@ -7,6 +7,14 @@ body, html{
     overflow: hidden;
     font-family: 'KoHo', sans-serif;
 }
+h3, h4{
+    font-family: 'KoHo', sans-serif;
+    font-size: 1.3em;
+}
+h4{
+    margin: 0;
+    font-family: 'KoHo', sans-serif;
+}
 
 .titlebar {
     -webkit-app-region: drag;
@@ -161,16 +169,127 @@ hr{
     position: absolute;
     bottom: 5px;
     left: 10px;
-    z-index: 2;
+    z-index: 10;
 }
 .info-item-, .info-item-error{
-    opacity: 0;
     background: #7289da;
-    margin-bottom: 5px;
-    margin-right: 10px;
-    padding: 10px 20px;
-    min-width: 190px;
+    opacity:        0;
+    margin-bottom:  5px;
+    margin-right:   10px;
+    padding:        10px 20px;
+    min-width:      190px;
+    z-index:        10;
 }
 .info-item-error{
     background: orange;
+    color: #23272a;
+}
+
+/* -----------YTDL---------- */
+.ytdl-container-deActive{
+    opacity: 0;
+    z-index: -5;
+    transition: all 200ms;
+}
+.ytdl-container-active{
+    display:         flex;
+    position:        fixed;
+    flex-direction:  column;
+    justify-content: center;
+    align-items:     center;
+    width:           100vw;
+    height:          100vh;
+    top:             0;
+    left:            0;
+    z-index:         5;
+    opacity:         1;
+    background-color: rgba(0,0,0,0.8);
+    transition: all 200ms;
+}
+
+.ytdl{
+    display:        flex;
+    align-items:    center;
+    flex-direction: column;
+    z-index:        100;
+    min-width:      600px;
+    min-height:     400px;
+    width:          60vw;
+    height:         40vh;
+    background:     #23272a;
+    border: solid 3px #7289da;
+}
+
+#close-ytdl{
+    margin:      10px;
+    align-self:  flex-end;
+}
+#close-ytdl i{
+    transition: all 200ms;
+}
+#close-ytdl i:hover{
+    cursor: pointer;
+    color: #7289da;
+}
+
+.ytdl h2{
+    margin: 0;
+    padding: 0;
+}
+
+input[type="text"] {
+    width:          80%;
+    height:         30px;
+    border-radius:  5px;
+    padding:        0 20px;
+    border:         none;
+    color:          #23272a;
+    font-size:      0.8em;
+}
+
+.deActiveBtn, .activeBtn, .successBtn{
+    width:          250px;
+    height:         auto;
+    border-radius:  5px;
+    background:     #7289da;
+    color:          #23272a;
+    border:         none;
+    margin:         5px;
+}
+.deActiveBtn h3{
+    font-size: 1.4em;
+}
+.activeBtn, .successBtn{
+    color:          #fff;
+    transition:     all 300ms;
+}
+.activeBtn:hover{
+    cursor:         pointer;
+    background:     orangered;
+}
+.successBtn:hover{
+    cursor:         pointer;
+    background:     greenyellow;
+}
+
+#ytdl_title{
+    padding:    5px 80px;
+    margin:     0;
+    font-size:  1em;
+    margin:     20px;
+    text-align: center;
+}
+
+.downloadPicDeActive, .downloadPicActive{
+    opacity:        0;
+    border-radius:  0px;
+    height:         20%;
+    width:          auto;
+    margin:         10px;
+    transition:     all 1000ms;
+}
+
+.downloadPicActive{
+    opacity:        1;
+    border-radius:  180px;
 }

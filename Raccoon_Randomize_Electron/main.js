@@ -7,7 +7,7 @@ const {app,  BrowserWindow, Menu, ipcMain} = electron;
 let mainWindow;
 
 
-process.env.NODE_ENV = 'rre_production';
+//process.env.NODE_ENV = 'rre_production';
 
 // Listener foor app to be ready
 app.on('ready', function(){

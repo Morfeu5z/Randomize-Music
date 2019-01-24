@@ -26,15 +26,16 @@
         <!-- Left box -->
         <div class="left-box">
             <div class="left-tools">
-                <div id="home-path"><< home</div> 
-                <div id="back-path">< back</div> 
-            </div> 
-                <div class="app-disk-label"><i id="disks-refresh" class="icon-arrows-cw refresh"></i> Drives List</div>
+                <div id="home-path">
+                    << home</div> <div id="back-path">
+                        < back</div> </div> <div class="app-disk-label"><i id="disks-refresh" class="icon-arrows-cw refresh"></i>
+                            Drives List
+                </div>
                 <div id="app-disk">
                     <ul></ul>
                 </div>
-        </div>
-        <!-- Right box -->
+            </div>
+            <!-- Right box -->
             <div class="right-box">
                 <div id="current-path"></div>
                 <div id="file-list">
@@ -44,13 +45,26 @@
         </div>
         <div id="info-slide"></div>
 
+        <div id="ytdl-container" class="ytdl-container-deActive">
+            <div class="ytdl">
+                <div id="close-ytdl"><i class="icon-cancel-circle"></i></div>
+                <h2><span style="color: orangered">YouTube</span> Downloader</h2>
+                <input id="url" type="text" placeholder="http://">
+                <p id="ytdl_title">= ^ w ^ =</p>
+                <button id="downloadButton" class="deActiveBtn">
+                    <h3>Wprowadź link</h3>
+                </button>
+                <img id="downloadPic" class="downloadPicDeActive" src="./assets/load.gif">
+            </div>
+        </div>
+
         <script src="js-func.js"></script>
         <script>
 
             // ------------ movement vv
             // get disks
             getDiskList();
-            diskRefresh.addEventListener('click', ()=>{
+            diskRefresh.addEventListener('click', () => {
                 addInfoSlide('Refresh list of drives.');
                 getDiskList
             });
@@ -59,11 +73,12 @@
             // Change dir or open
             ulList.addEventListener('contextmenu', (e) => {
                 ev = e;
-                aminate_slider([['icon-help','Info', infoFuncEvent]]);
+                aminate_slider([['icon-help', 'Info', infoFuncEvent], ['icon-minus-circle', 'Usuń', deleteFile]]);
+                setTriggerToDelete(e.target.textContent);
             });
             ulList.addEventListener('click', (e) => {
                 var newElement = e.target.textContent;
-                if(newElement!=''){
+                if (newElement != '') {
                     try {
                         if (fs.lstatSync(path + newElement).isDirectory()) {
                             pathTable.push(newElement);
@@ -74,6 +89,28 @@
                     } catch (err) {
                         alert('Brak dostępu!');
                     }
+                }
+            });
+
+            document.querySelector('#url').addEventListener('contextmenu', () => {
+                const { clipboard } = require('electron')
+                document.querySelector('#url').value = clipboard.readText();
+                ytdl_onchange(document.querySelector('#url').value);
+            });
+
+            document.querySelector('#url').addEventListener('change', () => {
+                ytdl_onchange(document.querySelector('#url').value);
+            });
+
+            document.querySelector('#close-ytdl').addEventListener('click', () => {
+                yt_downloader_hide();
+            });
+
+            document.querySelector('#downloadButton').addEventListener('click', (e) => {
+                if (document.querySelector('#url').value != "") {
+                    yt_downloader(document.querySelector('#url').value);
+                } else {
+                    console.log("Nieprawidowy link.");
                 }
             });
 
