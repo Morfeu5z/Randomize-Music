@@ -262,7 +262,7 @@ input[type="text"] {
     border-radius:      5px 0px 0px 5px;
     width:              150px;
 }
-.radioLabel:hover{
+.radioLabelActive:hover{
     background:     linear-gradient(45deg, rgba(114,137,218,1),rgba(114,137,218,0));
 }
 .radioLabel *:hover{
@@ -304,15 +304,18 @@ input[type="text"] {
 }
 
 .downloadPicDeActive, .downloadPicActive{
+    position:       absolute;
     opacity:        0;
     border-radius:  0px;
-    height:         20%;
+    height:         100px;
     width:          auto;
-    margin:         10px;
+    margin-top:     400px;
+    border-radius:  180px;
     transition:     all 1000ms;
 }
 
 .downloadPicActive{
     opacity:        1;
-    border-radius:  180px;
+    margin-top:     320px;
+    box-shadow:     5px 5px 5px #7289da;
 }
