@@ -1,13 +1,16 @@
 // Get drives list
 localStorage.setItem('DiskLoop', 0);
 
+/** Electron imports **/
 const electron = require('electron');
 const { remote, ipcRenderer } = require('electron');
 const popmotion = require('popmotion');
 const fs = require('fs');
 const diskInfo = require('diskinfo');
+const ytdl = require('ytdl-core');
 
 
+/** FM Comtrollers **/
 const ulList = document.querySelector('#file-list ul');
 const ulDisk = document.querySelector('#app-disk ul');
 const diskRefresh = document.querySelector('#disks-refresh');
@@ -17,11 +20,18 @@ var doAnimation = false; // left slider animation
 var pathTable = []; // Starter path on windows
 var path = '';
 
+/** YTD controllers **/
+var newTitle = '';
+var downloadBtnName = 'Pobierz MP3';
+var downloadAudio = true;
+var videoID;
 var activeYTDL = false;
 var downloadActive = false;
 var downloadSuccess = false;
 
 
+
+/** -----------------------App ---------------------- **/
 function closeApp() {
     remote.app.quit();
 }
@@ -37,7 +47,10 @@ function hiddeWindow() {
     remote.getCurrentWindow().minimize();
 }
 
-// get disks
+
+
+/** -----------------------File Manager---------------------- **/
+/** Create list of disks */
 function getDiskList() {
     ulDisk.innerHTML = '';
     diskInfo.getDrives((err, drives) => {
@@ -57,7 +70,9 @@ function getDiskList() {
     });
 }
 
-// Make path to dir or file
+/** Path maker
+ * @param {*} mode 
+ */
 function pathbuilder(mode) {
     var first = true;
     switch (mode) {
@@ -88,14 +103,16 @@ function pathbuilder(mode) {
     }
 }
 
-// View list of dirs and files
+/** Create list of dirs and files
+ * @param {*} path 
+ */
 function getDir(path) {
     files = fs.readdirSync(path);
     ulList.innerHTML = '';
     // console.log(files);
     files.forEach(element => {
-        console.log(element.slice(-4, -1));
-        if(element[0] != "$" && element.slice(-4, -1) != ".sy" && element.slice(-4, -1) != ".Ms"){
+        //console.log(element.slice(-4, -1));
+        if (element[0] != "$" && element.slice(-4, -1) != ".sy" && element.slice(-4, -1) != ".Ms") {
             newli = document.createElement('li'); // new li element
             newtxt = document.createTextNode(element); // add file or dir name
             newli.appendChild(newtxt);
@@ -106,7 +123,10 @@ function getDir(path) {
     document.querySelector('#current-path').innerHTML = path;
 }
 
-// Randomize files with prefix
+
+
+/** -----------------------Randomize Tools---------------------- **/
+/** Randomize files with prefix */
 function randomize() {
     // console.log(path);
     if (!confirm("Are you sure you want to randomize this directory: " + path + "?")) return 0;
@@ -140,7 +160,9 @@ function randomize() {
     }
 }
 
-// Back randomize prefix
+/** reRandomize files
+ * @param {*} setInfo 
+ */
 function reRandomize(setInfo = true) {
     if (setInfo) if (!confirm("Are you sure you want to re-randomize this directory: " + path + "?")) return 0;;
     // console.log(path);
@@ -182,6 +204,9 @@ function reRandomize(setInfo = true) {
     };
 }
 
+
+
+/** -----------------------YTDL---------------------- **/
 function yt_downloader_show() {
     document.querySelector('#ytdl-container').classList.add('ytdl-container-active');
 }
@@ -191,263 +216,284 @@ function yt_downloader_hide() {
     if (downloadActive) addInfoSlide('Pobieranie w tle.', '', 10000);
 }
 
+/** Audio/Video chooser
+ * @param {*} format 
+ */
+function setYTD_Radio(format){
+    if(activeYTDL == false && downloadActive == false){
+        switch(format){
+            case 'mp3':
+                downloadBtnName = 'Pobierz MP3';
+                document.querySelector('#downloadButton h3').textContent = downloadBtnName;
+                downloadAudio = true;
+                break;
+                
+                case 'mp4':
+                downloadBtnName = 'Pobierz MP4';
+                document.querySelector('#downloadButton h3').textContent = downloadBtnName;
+                downloadAudio = false;
+            break;
+        }
+    }
+}
 
+/** Download Audio Script
+ * @param {*} url 
+ */
+function yt_downloader_btn(url) {
+    if(downloadAudio){
+        videoID = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+        yt_downloader(url, '.mp3');
+    }else{
+        videoID = ytdl(url, { filter: 'audioandvideo', quality: 'highest' });
+        yt_downloader(url, '.mp4');
+    }
+}
+
+/** Active or deactive radio buttons
+ * mode: active, deactive
+ * FIXME: disable radio btn 
+ * @param {*} mode 
+ */
+function radioBtnMode(mode){
+    var YTD_radio = document.getElementsByName('ytd_radio');
+    switch (mode) {
+        case 'active':
+                YTD_radio.forEach(radio => {
+                    element.disabled = true;
+                });   
+            break;
+        case 'deactive':
+            YTD_radio.forEach(radio => {
+                element.disabled = true;
+            });   
+        break;
+
+    }    
+}
+
+/** check the correctness of url and title
+ * @param {link} url 
+ */
 function ytdl_onchange(url) {
     if (downloadActive == false) {
-        const ytdl = require('ytdl-core');
         try {
-            var videoID = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+            videoID = ytdl(url);
             ytdl.getInfo(ytdl.getURLVideoID(url), (err, info) => {
                 if (err) throw err;
                 console.log(info);
-                document.querySelector('#ytdl_title').textContent = info.title;
-                document.querySelector('#downloadButton').classList.add("activeBtn");
-                document.querySelector('#downloadButton h3').textContent = "Pobierz MP3";
-                addInfoSlide("Gotowe do pobrania.");
-                activeYTDL = true;
+                newtitle = titleStandarization(info.title);
+                ytd_panel_mode('linkAccept');
             });
         } catch (error) {
+            ytd_panel_mode('linkError');
+        }
+    }
+}
+
+/** YouTube Downloader Script
+ * @param {*} url 
+ */
+function yt_downloader(url, ext='.mp3') {
+    if (activeYTDL && downloadActive == false) {
+        if (path == "C:\\") {
+            addInfoSlide("Należy wskazać folder docelowy!", 'error', 10000);
+        } else {
+            // Blocking script if downloading is active
+            activeYTDL = false;
+            ytdl.getInfo(ytdl.getURLVideoID(url), (err, info) => {
+                if (err) throw err;
+                /**
+                 * TODO: Set Start and End point of music (cut)
+                 */
+
+                var filePointer = path + newTitle + ext;
+                // console.log("Path: " + filePointer);
+                videoID.pipe(fs.createWriteStream(filePointer));
+                ytd_panel_mode('start');
+            });
+            var ile = 0;
+            videoID.on("progress", () => {
+                console.log("Progress...");
+                document.querySelector('#downloadButton h3').textContent = "Pobieranie: " + ile++;
+            })
+
+            videoID.on("end", () => {
+                ytd_panel_mode('success');
+            })
+        }
+    } else if (downloadSuccess) ytd_panel_mode('reset');
+}
+
+/** Function return file name without problematic symbols
+ * @param {string} title 
+ */
+function titleStandarization(title = 'tmp') {
+    var omv = 'Official';
+    var sliceEnd = title.length;
+    if (title.length > 60) sliceEnd = 60;
+    title = title.slice(0, sliceEnd);
+
+    for (var i = 0; i < title.length; i++) {
+        var error = 0;
+        //console.log(title.slice(i, i+9));
+        if (title.slice(i, i + 8) == omv) {
+            if (title[i - 2] != ' ') {
+                title = title.slice(0, i - 1);
+            } else {
+                title = title.slice(0, i - 2);
+            }
+        } else {
+            switch (title[i]) {
+                case '\\':
+                    error++;
+                    break;
+                case '/':
+                    error++;
+                    break;
+                    break;
+                case ':':
+                    error++;
+                    break;
+                    break;
+                case '*':
+                    error++;
+                    break;
+                    break;
+                case '?':
+                    error++;
+                    break;
+                    break;
+                case '"':
+                    error++;
+                    break;
+                    break;
+                case '<':
+                    error++;
+                    break;
+                    break;
+                case '>':
+                    error++;
+                    break;
+                    break;
+                case '|':
+                    error++;
+                    break;
+                default:
+                    error = 0;
+            }
+            if (error > 0) title = title.slice(0, i) + title.slice(i + 1, title.length);
+        }
+    }
+    return title;
+}
+
+/** Change visual design using info about ytd status
+ * mode: 'success', 'start', 'reset'
+ * @param {ytd panel mode} mode 
+ */
+function ytd_panel_mode(mode) {
+    switch (mode) {
+        case 'reset':
+            document.querySelector('#url').value = '';
+            document.querySelector('#downloadButton').classList.remove("successBtn");
+            document.querySelector('#downloadButton h3').textContent = "Wprowadź link";
+            document.querySelector('#ytdl_title').textContent = '= ^ w ^ =';
+            radioBtnMode('active');
+            break;
+            
+            case 'success':
+            console.log("Download Complete");
+            addInfoSlide("Pobieranie zakończone");
+            document.querySelector('#downloadButton h3').textContent = "SUKCES!";
+            document.querySelector('#downloadButton').classList.remove("activeBtn");
+            document.querySelector('#downloadButton').classList.add("successBtn");
+            document.querySelector('#downloadPic').classList.remove("downloadPicActive");
+            downloadActive = false;
+            downloadSuccess = true;
+            break;
+            
+            case 'start':
+            console.log("Pobieranie!");
+            addInfoSlide("Rozpoczynam pobieranie");
+            document.querySelector('#downloadPic').classList.add("downloadPicActive");
+            downloadActive = true;
+            getDir(path);
+            radioBtnMode('deactive');
+            break;
+
+        case 'linkError':
             console.log("Link error.");
             addInfoSlide("Nieprawidowy link!", 'error');
             document.querySelector('#downloadButton').classList.remove("activeBtn");
             document.querySelector('#downloadButton h3').textContent = "Wprowadź link";
             document.querySelector('#ytdl_title').textContent = "Nieprawidowy link!";
-        }
-    }
-}
+            break;
 
-
-//YTD Music
-function yt_downloader(url) {
-    if (activeYTDL && downloadActive == false) {
-        if (path == "C:\\") {
-            addInfoSlide("Należy wskazać folder docelowy!", 'error', 10000);
-        } else {
-            activeYTDL = false;
-            const ytdl = require('ytdl-core');
-            var videoID = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
-            ytdl.getInfo(ytdl.getURLVideoID(url), (err, info) => {
-                if (err) throw err;
-                var sliceEnd = info.title.length;
-                if (info.title.length > 60) sliceEnd = 60;
-                var title = info.title.slice(0, sliceEnd);
-                /**
-                 * TODO: Remove 'Oficial Music Video' from title
-                 * TODO: Set Start and End point of music (cut)
-                 */
-                for (var i = 0; i < title.length; i++) {
-                    var error = 0;
-                    switch (title[i]) {
-                        case '\\':
-                        error++;
-                        break;
-                        case '/':
-                        error++;
-                        break;
-                        break;
-                        case ':':
-                        error++;
-                        break;
-                        break;
-                        case '*':
-                        error++;
-                        break;
-                        break;
-                        case '?':
-                        error++;
-                        break;
-                        break;
-                        case '"':
-                        error++;
-                        break;
-                        break;
-                        case '<':
-                        error++;
-                        break;
-                        break;
-                        case '>':
-                        error++;
-                        break;
-                        break;
-                        case '|':
-                        error++;
-                        break;
-                        default:
-                        error = 0;
-                    }
-                    if (error > 0) title = title.slice(0, i) + title.slice(i + 1, title.length);
-                }
-                
-                var filePointer = path + title + '.mp3';
-                console.log("Path: " + filePointer);
-                videoID.pipe(fs.createWriteStream(filePointer));
-                console.log("Pobieranie!");
-                addInfoSlide("Rozpoczynam pobieranie");
-                document.querySelector('#downloadButton h3').textContent = "Rozpoczynam pobieranie";
-                document.querySelector('#downloadPic').classList.add("downloadPicActive");
-                downloadActive = true;
-            });
-            var ile = 0;
-            videoID.on("progress", () => {
-                console.log("Progress...");
-                document.querySelector('#downloadButton h3').textContent = "Pobieranie: " + ile++;
-            })
-            
-            videoID.on("end", () => {
-                console.log("Download Complete");
-                addInfoSlide("Pobieranie zakończone");
-                document.querySelector('#downloadButton h3').textContent = "SUKCES!";
-                document.querySelector('#downloadButton').classList.remove("activeBtn");
-                document.querySelector('#downloadButton').classList.add("successBtn");
-                document.querySelector('#downloadPic').classList.remove("downloadPicActive");
-                downloadActive = false;
-                downloadSuccess = true;
-            })
-        }
-    }else if(downloadSuccess){
-        document.querySelector('#url').value = '';
-        document.querySelector('#downloadButton').classList.remove("successBtn");
-        document.querySelector('#downloadButton h3').textContent = "Wprowadź link";
-        document.querySelector('#ytdl_title').textContent = '= ^ w ^ =';
-    }
-}
-
-
-/**
- * TODO: Video Downloader Script
- * @param {*} url 
- */
-//YTD Video
-function yt_downloader_video(url) {
-    if (activeYTDL && downloadActive == false) {
-        if (path == "C:\\") {
-            addInfoSlide("Należy wskazać folder docelowy!", 'error', 10000);
-        } else {
-            activeYTDL = false;
-            const ytdl = require('ytdl-core');
-            var videoID = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
-            ytdl.getInfo(ytdl.getURLVideoID(url), (err, info) => {
-                if (err) throw err;
-                var sliceEnd = info.title.length;
-                if (info.title.length > 40) sliceEnd = 40;
-                var title = info.title.slice(0, sliceEnd);
-                
-                for (var i = 0; i < title.length; i++) {
-                    var error = 0;
-                    switch (title[i]) {
-                        case '\\':
-                        error++;
-                        break;
-                        case '/':
-                        error++;
-                        break;
-                        break;
-                        case ':':
-                        error++;
-                        break;
-                        break;
-                        case '*':
-                        error++;
-                        break;
-                        break;
-                        case '?':
-                        error++;
-                        break;
-                        break;
-                        case '"':
-                        error++;
-                        break;
-                        break;
-                        case '<':
-                        error++;
-                        break;
-                        break;
-                        case '>':
-                        error++;
-                        break;
-                        break;
-                        case '|':
-                        error++;
-                        break;
-                        default:
-                        error = 0;
-                    }
-                    if (error > 0) title = title.slice(0, i) + title.slice(i + 1, title.length);
-                }
-                
-                var filePointer = path + title + '.mp3';
-                console.log("Path: " + filePointer);
-                videoID.pipe(fs.createWriteStream(filePointer));
-                console.log("Pobieranie!");
-                addInfoSlide("Rozpoczynam pobieranie");
-                document.querySelector('#downloadButton h3').textContent = "Rozpoczynam pobieranie";
-                document.querySelector('#downloadPic').classList.add("downloadPicActive");
-                downloadActive = true;
-            });
-            var ile = 0;
-            videoID.on("progress", () => {
-                console.log("Progress...");
-                document.querySelector('#downloadButton h3').textContent = "Pobieranie: " + ile++;
-            })
-            
-            videoID.on("end", () => {
-                console.log("Download Complete");
-                addInfoSlide("Pobieranie zakończone");
-                document.querySelector('#downloadButton h3').textContent = "SUKCES!";
-                document.querySelector('#downloadButton').classList.remove("activeBtn");
-                document.querySelector('#downloadButton').classList.add("successBtn");
-                document.querySelector('#downloadPic').classList.remove("downloadPicActive");
-                downloadActive = false;
-                downloadSuccess = true;
-            })
-        }
-    }else if(downloadSuccess){
-        document.querySelector('#url').value = '';
-        document.querySelector('#downloadButton').classList.remove("successBtn");
-        document.querySelector('#downloadButton h3').textContent = "Wprowadź link";
-        document.querySelector('#ytdl_title').textContent = '= ^ w ^ =';
+        case 'linkAccept':
+            document.querySelector('#ytdl_title').textContent = newTitle;
+            document.querySelector('#downloadButton').classList.add("activeBtn");
+            document.querySelector('#downloadButton h3').textContent = downloadBtnName;
+            addInfoSlide("Gotowe do pobrania.");
+            activeYTDL = true;
+            break;
     }
 }
 
 
 
-
+/** -----------------------File delete---------------------- **/
+/** Delete file global path*/
 var toDelete;
-function setTriggerToDelete(ev){
+
+/** Delete global path builder
+ * @param {*} ev 
+ */
+function setTriggerToDelete(ev) {
     toDelete = path + ev;
 }
-function deleteFile(){
+
+/** Delete file or directory */
+function deleteFile() {
     console.log("File to delete: " + toDelete);
     try {
-        if(fs.lstatSync(toDelete).isDirectory()){
+        if (fs.lstatSync(toDelete).isDirectory()) {
             if (!confirm("Napewno chcesz usunąć folder: \"" + toDelete + "\"?")) {
                 aminate_slider();
                 return 0;
             }
-        }else if(fs.lstatSync(toDelete).isFile()){
+        } else if (fs.lstatSync(toDelete).isFile()) {
             if (!confirm("Napewno chcesz usunąć plik: \"" + toDelete + "\"?")) {
                 aminate_slider();
                 return 0;
             }
-        }else{
+        } else {
             aminate_slider();
             return 0;
         }
-        console.log("Deleted file: " + toDelete);
         aminate_slider();
-        addInfoSlide("Usunięto: " + toDelete);
-        /**
-         * TODO: Remove files and refresh list
-         */
+        try {
+            fs.unlinkSync(toDelete);
+            console.log("Deleted file: " + toDelete);
+            addInfoSlide("Usunięto: " + toDelete);
+            getDir(path);
+        } catch (error) {
+            console.log("Delete error!");
+            addInfoSlide("Wystąpil problem podczas usuwania!", 'error');
+            getDir(path);
+        }
     } catch (error) {
         aminate_slider();
         addInfoSlide("Brak dostępu do obiektu!", 'error');
+        getDir(path);
     }
-    
+
 }
 
 
-// add button
+
+/** -----------------------Slider menu and info---------------------- **/
+/** Slider (left menu) button maker */
 function addButton(ico, txt, func = closeApp, style = 'slider-button') {
     var button = document.createElement('div');
     var div_ico = document.createElement('div');
@@ -464,13 +510,13 @@ function addButton(ico, txt, func = closeApp, style = 'slider-button') {
     return button;
 }
 
-// info about file on slider
+/** info about file on slider */
 function infoFuncEvent(e) {
     addInfoSlide(ev.target.textContent);
     // console.log(ev.target.textContent);
 }
 
-// Make left menu
+/** Left menu maker (slider) */
 function aminate_slider(btnList = []) {
     dur = 250;
     if (!clickedMenuBox && !doAnimation) {
@@ -526,6 +572,7 @@ function aminate_slider(btnList = []) {
     }
 };
 
+/** Info block maker */
 function addInfoSlide(txt, clas = '', wait = 4000) {
     if (clickedMenuBox) aminate_slider();
     var infoBox = document.querySelector('#info-slide');

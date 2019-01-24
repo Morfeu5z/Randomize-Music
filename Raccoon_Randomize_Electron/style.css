@@ -247,6 +247,29 @@ input[type="text"] {
     font-size:      0.8em;
 }
 
+.radioAndBtn, .radioAndBtn form{
+    display:            flex;
+    flex-direction:     row;
+    justify-content:    center;
+    align-items:        center;
+}
+
+.radioAndBtn form{
+    flex-direction:     column;
+    margin:             0 10px;
+}
+.radioLabel{
+    border-radius:      5px 0px 0px 5px;
+    width:              150px;
+}
+.radioLabel:hover{
+    background:     linear-gradient(45deg, rgba(114,137,218,1),rgba(114,137,218,0));
+}
+.radioLabel *:hover{
+    cursor:         pointer;
+}
+
+
 .deActiveBtn, .activeBtn, .successBtn{
     width:          250px;
     height:         auto;
