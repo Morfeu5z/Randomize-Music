@@ -50,8 +50,7 @@
                 <div id="close-ytdl"><i class="icon-cancel-circle"></i></div>
                 <h2><span style="color: orangered">YouTube</span> Downloader</h2>
                 <input id="url" type="text" placeholder="http://">
-                <p id="ytdl_title">= ^ w ^ =</p>
-                <!-- FIXME: User should can adding him own title -->
+                <input id="ytdl_title" type="text" placeholder="= ^ w ^ =">
                 <div class="radioAndBtn">
                     <button id="downloadButton" class="deActiveBtn">
                         <h3>Wprowadź link</h3>
@@ -116,11 +115,15 @@
             document.querySelector('#url').addEventListener('contextmenu', () => {
                 const { clipboard } = require('electron')
                 document.querySelector('#url').value = clipboard.readText();
-                ytdl_onchange(document.querySelector('#url').value);
+                ytdl_linkCheck(document.querySelector('#url').value);
             });
 
             document.querySelector('#url').addEventListener('change', () => {
-                ytdl_onchange(document.querySelector('#url').value);
+                ytdl_linkCheck(document.querySelector('#url').value);
+            });
+
+            document.querySelector('#ytdl_title').addEventListener('change', () => {
+                ytdl_nameChange(document.querySelector('#ytdl_title').value);
             });
 
             document.querySelector('#close-ytdl').addEventListener('click', () => {

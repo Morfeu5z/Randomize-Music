@@ -216,10 +216,19 @@ function yt_downloader_hide() {
     if (downloadActive) addInfoSlide('Pobieranie w tle.', '', 10000);
 }
 
+/** Check title when user modify it
+ * @param {*} name 
+ */
+function ytdl_nameChange(name){
+    newTitle = titleStandarization(name);
+    console.log(newTitle);
+    ytd_panel_mode('mp3mp4');
+}
+
 /** check the correctness of url and title
  * @param {link} url 
  */
-function ytdl_onchange(url) {
+function ytdl_linkCheck(url) {
     if (downloadActive == false) {
         try {
             videoID = ytdl(url);
@@ -240,18 +249,18 @@ function ytdl_onchange(url) {
  */
 function setYTD_Radio(format){
     // console.log(format);
-    if(downloadActive === false && activeYTDL){
+    if(downloadActive === false){
         switch(format){
             case 'mp3':
                 downloadBtnName = 'Pobierz MP3';
-                document.querySelector('#downloadButton h3').textContent = 'Pobierz MP3';
                 downloadAudio = true;
+                ytd_panel_mode('mp3mp4');
                 break;
                 
-            case 'mp4':
+                case 'mp4':
                 downloadBtnName = 'Pobierz MP4';
-                document.querySelector('#downloadButton h3').textContent = 'Pobierz MP4';
                 downloadAudio = false;
+                ytd_panel_mode('mp3mp4');
                 break;
         }
     }
@@ -279,15 +288,19 @@ function radioBtnMode(mode){
 }
 
 /** Download Audio Script
- * FIXME: It's definitly not best quality ; - ;
+ * FIXME: It's definitly not best quality, for that I need converting with ffmpeg used
  * @param {*} url 
  */
 function yt_downloader_btn(url) {
     if(downloadAudio){
-        videoID = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+        // videoID = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+        // videoID = ytdl(url, {filter: (format) => format.audioBitrate === 128 });
+        /** best audio */
+        videoID = ytdl(url, { filter: 'audioonly'});
         yt_downloader(url, '.mp3');
     }else{
-        videoID = ytdl(url, { filter: 'audioandvideo', quality: 'highest' });
+        // videoID = ytdl(url, { filter: 'audioandvideo', quality: 'highest' });
+        videoID = ytdl(url, { quality: 'highest'});
         yt_downloader(url, '.mp4');
     }
 }
@@ -302,6 +315,7 @@ function yt_downloader(url, ext='.mp3') {
         } else {
             // Blocking script if downloading is active
             activeYTDL = false;
+            newTitle = titleStandarization(newTitle);
             ytdl.getInfo(ytdl.getURLVideoID(url), (err, info) => {
                 if (err) throw err;
                 /** TODO: Set Start and End point of music (cut) */
@@ -392,34 +406,45 @@ function titleStandarization(title = 'tmp') {
  */
 function ytd_panel_mode(mode) {
     switch (mode) {
+        case 'mp3mp4':
+            if(downloadSuccess){
+                document.querySelector('#downloadButton').classList.remove("successBtn");
+                downloadSuccess = false;
+            }
+            document.querySelector('#downloadButton h3').textContent = downloadBtnName;
+            document.querySelector('#ytdl_title').disabled = false;
+            ytd_panel_mode('linkAccept');
+            break;
+
         case 'reset':
             document.querySelector('#url').value = '';
             document.querySelector('#downloadButton').classList.remove("successBtn");
             document.querySelector('#downloadButton h3').textContent = "Wprowadź link";
-            document.querySelector('#ytdl_title').textContent = '= ^ w ^ =';
-            /** TODO: Reset radio btn */
+            document.querySelector('#ytdl_title').value = '';
+            document.querySelector('#url').disabled = false;
             break;
             
-            case 'success':
+        case 'success':
             console.log("Download Complete");
             addInfoSlide("Pobieranie zakończone");
-            document.querySelector('#downloadButton h3').textContent = "SUKCES!";
+            document.querySelector('#downloadButton h3').textContent = "Clear!";
             document.querySelector('#downloadButton').classList.remove("activeBtn");
             document.querySelector('#downloadButton').classList.add("successBtn");
             document.querySelector('#downloadPic').classList.remove("downloadPicActive");
             downloadActive = false;
             downloadSuccess = true;
             radioBtnMode('active');
-            /** FIXME: Do not delete link but give chance to download video too */
             break;
             
-            case 'start':
+        case 'start':
             console.log("Pobieranie!");
             addInfoSlide("Rozpoczynam pobieranie");
             document.querySelector('#downloadPic').classList.add("downloadPicActive");
             downloadActive = true;
             getDir(path);
             radioBtnMode('deactive');
+            document.querySelector('#ytdl_title').disabled = true;
+            document.querySelector('#url').disabled = true;
             break;
 
         case 'linkError':
@@ -431,7 +456,7 @@ function ytd_panel_mode(mode) {
             break;
 
         case 'linkAccept':
-            document.querySelector('#ytdl_title').textContent = newTitle;
+            document.querySelector('#ytdl_title').value = newTitle;
             document.querySelector('#downloadButton').classList.add("activeBtn");
             document.querySelector('#downloadButton h3').textContent = downloadBtnName;
             addInfoSlide("Gotowe do pobrania.");

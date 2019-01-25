@@ -212,12 +212,10 @@ hr{
     align-items:    center;
     flex-direction: column;
     z-index:        100;
-    min-width:      600px;
-    min-height:     400px;
-    width:          60vw;
-    height:         40vh;
+    width:      600px;
+    height:     350px;
     background:     #23272a;
-    border: solid 3px #7289da;
+    border:         solid 3px #7289da;
 }
 
 #close-ytdl{
@@ -296,18 +294,18 @@ input[type="text"] {
 }
 
 #ytdl_title{
-    padding:    5px 80px;
-    margin:     0;
     font-size:  1em;
-    margin:     20px;
     text-align: center;
+    background: none;
+    margin: 20px 0px;
+    border: 1px solid #7289da;
+    color: #fff;
 }
 
 .downloadPicDeActive, .downloadPicActive{
     position:       absolute;
     opacity:        0;
-    border-radius:  0px;
-    height:         100px;
+    height:         130px;
     width:          auto;
     margin-top:     400px;
     border-radius:  180px;
@@ -316,6 +314,6 @@ input[type="text"] {
 
 .downloadPicActive{
     opacity:        1;
-    margin-top:     320px;
-    box-shadow:     5px 5px 5px #7289da;
+    margin-top:     290px;
+    border:         solid 4px #7289da;
 }

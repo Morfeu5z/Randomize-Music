@@ -12,8 +12,8 @@ let mainWindow;
 // Listener foor app to be ready
 app.on('ready', function(){
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1000,
+        height: 700,
         frame: false
     });
     mainWindow.loadURL(url.format({
