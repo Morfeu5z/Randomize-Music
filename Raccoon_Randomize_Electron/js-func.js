@@ -9,7 +9,6 @@ const fs = require('fs');
 const diskInfo = require('diskinfo');
 const ytdl = require('ytdl-core');
 
-
 /** FM Comtrollers **/
 const ulList = document.querySelector('#file-list ul');
 const ulDisk = document.querySelector('#app-disk ul');
@@ -33,6 +32,11 @@ var downloadSuccess = false;
 
 /** -----------------------App ---------------------- **/
 function closeApp() {
+    if(downloadActive){
+        if (!confirm("Trwa pobieranie z YouTube, napewno chcesz zamknąć program?")) {
+            return 0;
+        }
+    }
     remote.app.quit();
 }
 function minmax() {
@@ -50,7 +54,9 @@ function hiddeWindow() {
 
 
 /** -----------------------File Manager---------------------- **/
-/** Create list of disks */
+/** Create list of disks 
+ *  FIXME: On real, it is not working xD, disklist is static
+*/
 function getDiskList() {
     ulDisk.innerHTML = '';
     diskInfo.getDrives((err, drives) => {
@@ -128,35 +134,37 @@ function getDir(path) {
 /** -----------------------Randomize Tools---------------------- **/
 /** Randomize files with prefix */
 function randomize() {
-    // console.log(path);
-    if (!confirm("Are you sure you want to randomize this directory: " + path + "?")) return 0;
-    reRandomize(false);
-    var wasRandom = false;
-    var list = fs.readdirSync(path);
-    var miss = 0;
-    var prefix = 0;
-    var ll = list.length;
-    for (var i = 0; i < ll; i++) {
-        // console.log(list);
-        var x = 0;
-        x = Math.floor(Math.random() * (list.length - 1));
-        // console.log(x);
-        prefix++;
-        if (fs.lstatSync(path + list[x]).isDirectory()) {
-            //Do nothing
-            miss++;
-        } else {
-            fs.renameSync(path + list[x], path + prefix + "_-_" + list[x]);
-            wasRandom = true;
+    if(!downloadActive){
+        // console.log(path);
+        if (!confirm("Are you sure you want to randomize this directory: " + path + "?")) return 0;
+        reRandomize(false);
+        var wasRandom = false;
+        var list = fs.readdirSync(path);
+        var miss = 0;
+        var prefix = 0;
+        var ll = list.length;
+        for (var i = 0; i < ll; i++) {
+            // console.log(list);
+            var x = 0;
+            x = Math.floor(Math.random() * (list.length - 1));
+            // console.log(x);
+            prefix++;
+            if (fs.lstatSync(path + list[x]).isDirectory()) {
+                //Do nothing
+                miss++;
+            } else {
+                fs.renameSync(path + list[x], path + prefix + "_-_" + list[x]);
+                wasRandom = true;
+            }
+            list.splice(x, 1);
         }
-        list.splice(x, 1);
-    }
-    getDir(path);
-    if (wasRandom) {
-        addInfoSlide('Randomize Complete.');
-        addInfoSlide('Miss directory: ' + miss);
-    } else {
-        addInfoSlide('Nothing to randomize.');
+        getDir(path);
+        if (wasRandom) {
+            addInfoSlide('Randomize Complete.');
+            addInfoSlide('Miss directory: ' + miss);
+        } else {
+            addInfoSlide('Nothing to randomize.');
+        }
     }
 }
 
@@ -164,44 +172,46 @@ function randomize() {
  * @param {*} setInfo 
  */
 function reRandomize(setInfo = true) {
-    if (setInfo) if (!confirm("Are you sure you want to re-randomize this directory: " + path + "?")) return 0;;
-    // console.log(path);
-    var list = fs.readdirSync(path);
-    var prefix = 0;
-    var wasRandom = false;
-    list.forEach(item => {
-        var ext = item.split('.');
-        ext = ext[ext.length - 1];
-        var end = item.length - ext.length;
+    if(!downloadActive){
+        if (setInfo) if (!confirm("Are you sure you want to re-randomize this directory: " + path + "?")) return 0;;
+        // console.log(path);
+        var list = fs.readdirSync(path);
+        var prefix = 0;
+        var wasRandom = false;
+        list.forEach(item => {
+            var ext = item.split('.');
+            ext = ext[ext.length - 1];
+            var end = item.length - ext.length;
 
-        for (var i = 0; i < end; i++) {
-            var old_prefix = item.slice(i, i + 2);
-            var prefix = item.slice(i, i + 3);
-            if (prefix == "_-_") {
-                try {
-                    wasRandom = true;
-                    fs.renameSync(path + item, path + item.slice(i + 3, item.length));
-                    i = end;
-                } catch (error) {
-                    addInfoSlide('Error! File: \"' + item + '\" is used by another program.', 'error', 10000);
-                }
-            } else if (old_prefix == '. ') {
-                try {
-                    wasRandom = true;
-                    fs.renameSync(path + item, path + item.slice(i + 2, item.length));
-                    i = end;
-                } catch (error) {
-                    addInfoSlide('Error! File: \"' + item + '\" is used by another program.', 'error', 10000);
+            for (var i = 0; i < end; i++) {
+                var old_prefix = item.slice(i, i + 2);
+                var prefix = item.slice(i, i + 3);
+                if (prefix == "_-_") {
+                    try {
+                        wasRandom = true;
+                        fs.renameSync(path + item, path + item.slice(i + 3, item.length));
+                        i = end;
+                    } catch (error) {
+                        addInfoSlide('Error! File: \"' + item + '\" is used by another program.', 'error', 10000);
+                    }
+                } else if (old_prefix == '. ') {
+                    try {
+                        wasRandom = true;
+                        fs.renameSync(path + item, path + item.slice(i + 2, item.length));
+                        i = end;
+                    } catch (error) {
+                        addInfoSlide('Error! File: \"' + item + '\" is used by another program.', 'error', 10000);
+                    }
                 }
             }
-        }
-    });
-    getDir(path);
-    if (setInfo) if (wasRandom) {
-        addInfoSlide('Re-Randomize Complete.');
-    } else {
-        addInfoSlide('Nothing to Re-Randomize.');
-    };
+        });
+        getDir(path);
+        if (setInfo) if (wasRandom) {
+            addInfoSlide('Re-Randomize Complete.');
+        } else {
+            addInfoSlide('Nothing to Re-Randomize.');
+        };
+    }
 }
 
 
@@ -244,7 +254,7 @@ function ytdl_linkCheck(url) {
     }
 }
 
-/** Audio/Video chooser
+/** Audio/Video radio btn chooser
  * @param {*} format 
  */
 function setYTD_Radio(format){
@@ -287,16 +297,15 @@ function radioBtnMode(mode){
     }    
 }
 
-/** Download Audio Script
+/** Download Audio or Video
  * FIXME: It's definitly not best quality, for that I need converting with ffmpeg used
  * @param {*} url 
  */
 function yt_downloader_btn(url) {
     if(downloadAudio){
-        // videoID = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
-        // videoID = ytdl(url, {filter: (format) => format.audioBitrate === 128 });
         /** best audio */
-        videoID = ytdl(url, { filter: 'audioonly'});
+        videoID = ytdl(url, {filter: 'audioonly', quality: 'highestaudio'});
+        // videoID = ytdl(url, {filter: (format) => format.container === 'mp4'});
         yt_downloader(url, '.mp3');
     }else{
         // videoID = ytdl(url, { filter: 'audioandvideo', quality: 'highest' });
@@ -322,6 +331,7 @@ function yt_downloader(url, ext='.mp3') {
                 var filePointer = path + newTitle + ext;
                 // console.log("Path: " + filePointer);
                 videoID.pipe(fs.createWriteStream(filePointer));
+            
                 ytd_panel_mode('start');
             });
             var ile = 0;
@@ -332,6 +342,7 @@ function yt_downloader(url, ext='.mp3') {
 
             videoID.on("end", () => {
                 ytd_panel_mode('success');
+                /** TODO: Copy meat data to mp3 */
             })
         }
     } else if (downloadSuccess) ytd_panel_mode('reset');
@@ -411,7 +422,9 @@ function ytd_panel_mode(mode) {
                 document.querySelector('#downloadButton').classList.remove("successBtn");
                 downloadSuccess = false;
             }
-            document.querySelector('#downloadButton h3').textContent = downloadBtnName;
+            /** FIXME: Not change btn name if link incorrect and wait to check */
+            /** FIXME: Something crash after build */
+            if(activeYTDL)document.querySelector('#downloadButton h3').textContent = downloadBtnName;
             document.querySelector('#ytdl_title').disabled = false;
             ytd_panel_mode('linkAccept');
             break;
@@ -422,6 +435,7 @@ function ytd_panel_mode(mode) {
             document.querySelector('#downloadButton h3').textContent = "Wprowadź link";
             document.querySelector('#ytdl_title').value = '';
             document.querySelector('#url').disabled = false;
+            document.querySelector('#ytdl_title').disabled = false;
             break;
             
         case 'success':
@@ -541,6 +555,7 @@ function infoFuncEvent(e) {
     // console.log(ev.target.textContent);
 }
 
+/** TODO:  */
 /** Left menu maker (slider) */
 function aminate_slider(btnList = []) {
     dur = 250;

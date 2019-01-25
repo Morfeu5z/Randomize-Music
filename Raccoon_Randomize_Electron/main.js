@@ -51,13 +51,13 @@ const mainMenuTemplate = [
 ]
 
 // Add developer tools
-if(process.env.NODE_ENV !== 'rre_production'){
+// if(process.env.NODE_ENV !== 'rre_production'){
     mainMenuTemplate.push({
         label: 'Tools',
         submenu:[
             {
                 label: 'Dev Tools',
-                accelerator: process.platform == 'darwin' ? 'Command+I' : 'Ctrl+I',
+                //accelerator: process.platform == 'darwin' ? 'Command+I' : 'Ctrl+I',
                 click(item, focusedWindow){
                     focusedWindow.toggleDevTools();
                 }
@@ -67,4 +67,4 @@ if(process.env.NODE_ENV !== 'rre_production'){
             }
         ]
     });
-}
+// }
