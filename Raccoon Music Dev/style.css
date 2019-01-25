@@ -1,0 +1,319 @@
+body, html{
+    background-color: #2c2f33; 
+    margin: 0;
+    padding: 0;
+    color: white;
+    font-size: 1.2em;
+    overflow: hidden;
+    font-family: 'KoHo', sans-serif;
+}
+h3, h4{
+    font-family: 'KoHo', sans-serif;
+    font-size: 1.3em;
+}
+h4{
+    margin: 0;
+    font-family: 'KoHo', sans-serif;
+}
+
+.titlebar {
+    -webkit-app-region: drag;
+  }
+
+.app-title{
+    display: grid;
+    grid-template-columns: 100px auto 100px;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #7289da;
+}
+
+#app-menu{
+    transition: all 200ms;
+    -webkit-app-region: no-drag;
+}
+#app-menu:hover{
+    cursor: pointer;
+    color: #2c2f33;
+}
+
+#app-action{
+    -webkit-app-region: no-drag;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    justify-content: end;
+    /* border: 1px solid #2c2f33; */
+}
+#app-action div{
+    margin: 0px 5px;
+    width: 20px;
+    /* border: 1px solid #2c2f33; */
+    text-align: center;
+    transition: all 200ms;
+}
+#app-action div:hover{
+    cursor: pointer;
+    color: #2c2f33;
+}
+
+div:hover{
+    cursor: default;
+}
+
+.box{
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 250px auto;
+    font-size: 0.8em;
+}
+.left-box{
+    height: 95vh;
+    background: #23272a;
+    border-right: 1px solid rgba(0,0,0.5);
+    overflow-y: auto;
+}
+.right-box{
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto;
+    align-content: start;	
+}
+#current-path{
+    font-size: 1em;
+    background: #23272a;
+    border-bottom: 1px solid rgba(0,0,0,0.5);
+    padding: 10px;
+}
+#file-list{
+    overflow: auto;
+    padding-bottom: 50px; 
+}
+
+.slider-box{
+    position: absolute;
+    width: 250px;
+    height: 100vh;
+    background: #7289da;
+    margin-left: -250px;
+    transition: all 200ms;
+    transition-timing-function: ease-out;
+    border-right: 1px solid #7289da;
+    border-top: 1px solid #23272a;
+}
+.left-tools{
+    display: grid;
+    grid-template-columns: 50% 50%;
+    text-align: center;
+    border-bottom: 1px solid rgba(0,0,0,0.5);
+}
+.left-tools div{
+    padding: 10px 5px;
+    font-size: 1em;
+    transition: all 200ms;
+}
+.left-tools div:hover{
+    cursor: pointer;
+    background: #7289da;
+}
+.app-disk-label{
+    text-align: center;
+    padding: 10px;
+}
+
+ul li{
+    text-decoration: none;
+    list-style-type: square;
+    padding: 3px 10px;
+    border-radius: 5px 0px 0px 5px;
+    transition: all 200ms;
+}
+ul li:hover{
+    background: linear-gradient(45deg, rgba(114,137,218,1),rgba(114,137,218,0));
+    cursor: pointer;
+}
+hr{
+    border: none;
+    border-top: 1px solid rgba(0,0,0,0.5);
+  }
+
+.refresh{
+    transition: all .2s;
+}
+.refresh:hover{
+    color: #7289da;
+    cursor: pointer;
+}
+
+.slider-button{
+    display: grid;
+    grid-template-columns: 25% auto;
+    transition: all .2s;
+    border-bottom: 1px solid #23272a;
+}
+.slider-button div:last-child{
+    text-align: left;
+}
+.slider-button div{
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    justify-content: center;
+}
+.slider-button:hover{
+    background: #23272a;
+    cursor: pointer;
+}
+
+#info-slide{
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    z-index: 10;
+}
+.info-item-, .info-item-error{
+    background: #7289da;
+    opacity:        0;
+    margin-bottom:  5px;
+    margin-right:   10px;
+    padding:        10px 20px;
+    min-width:      190px;
+    z-index:        10;
+}
+.info-item-error{
+    background: orange;
+    color: #23272a;
+}
+
+/* -----------YTDL---------- */
+.ytdl-container-deActive{
+    opacity: 0;
+    z-index: -5;
+    transition: all 200ms;
+}
+.ytdl-container-active{
+    display:         flex;
+    position:        fixed;
+    flex-direction:  column;
+    justify-content: center;
+    align-items:     center;
+    width:           100vw;
+    height:          100vh;
+    top:             0;
+    left:            0;
+    z-index:         5;
+    opacity:         1;
+    background-color: rgba(0,0,0,0.8);
+    transition: all 200ms;
+}
+
+.ytdl{
+    display:        flex;
+    align-items:    center;
+    flex-direction: column;
+    z-index:        100;
+    width:      600px;
+    height:     350px;
+    background:     #23272a;
+    border:         solid 3px #7289da;
+}
+
+#close-ytdl{
+    margin:      10px;
+    align-self:  flex-end;
+}
+#close-ytdl i{
+    transition: all 200ms;
+}
+#close-ytdl i:hover{
+    cursor: pointer;
+    color: #7289da;
+}
+
+.ytdl h2{
+    margin: 0;
+    padding: 0;
+}
+
+input[type="text"] {
+    width:          80%;
+    height:         30px;
+    border-radius:  5px;
+    padding:        0 20px;
+    border:         none;
+    color:          #23272a;
+    font-size:      0.8em;
+}
+
+.radioAndBtn, .radioAndBtn form{
+    display:            flex;
+    flex-direction:     row;
+    justify-content:    center;
+    align-items:        center;
+}
+
+.radioAndBtn form{
+    flex-direction:     column;
+    margin:             0 10px;
+}
+.radioLabel{
+    border-radius:      5px 0px 0px 5px;
+    width:              150px;
+}
+.radioLabelActive:hover{
+    background:     linear-gradient(45deg, rgba(114,137,218,1),rgba(114,137,218,0));
+}
+.radioLabel *:hover{
+    cursor:         pointer;
+}
+
+
+.deActiveBtn, .activeBtn, .successBtn{
+    width:          250px;
+    height:         auto;
+    border-radius:  5px;
+    background:     #7289da;
+    color:          #23272a;
+    border:         none;
+    margin:         5px;
+}
+.deActiveBtn h3{
+    font-size: 1.4em;
+}
+.activeBtn, .successBtn{
+    color:          #fff;
+    transition:     all 300ms;
+}
+.activeBtn:hover{
+    cursor:         pointer;
+    background:     orangered;
+}
+.successBtn:hover{
+    cursor:         pointer;
+    background:     greenyellow;
+}
+
+#ytdl_title{
+    font-size:  1em;
+    text-align: center;
+    background: none;
+    margin: 20px 0px;
+    border: 1px solid #7289da;
+    color: #fff;
+}
+
+.downloadPicDeActive, .downloadPicActive{
+    position:       absolute;
+    opacity:        0;
+    height:         130px;
+    width:          auto;
+    margin-top:     400px;
+    border-radius:  180px;
+    transition:     all 1000ms;
+}
+
+.downloadPicActive{
+    opacity:        1;
+    margin-top:     290px;
+    border:         solid 4px #7289da;
+}

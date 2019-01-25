@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="fontello/css/fontello.css">
+    <link href="https://fonts.googleapis.com/css?family=KoHo:400,500,600,700&amp;subset=latin-ext" rel="stylesheet">
+    <title>File Menager</title>
+</head>
+
+<body>
+
+    <div class="app-title titlebar">
+        <div id="app-menu"><i class="icon-th-large"></i></div>
+        <div style="font-style: italic;">Raccoon Randomize</div>
+        <div id="app-action">
+            <div id="app-hidde"><i class="icon-minus-circle"></i></div>
+            <div id="app-max"><i class="icon-resize-full-circle"></i></div>
+            <div id="app-close"><i class="icon-cancel-circle"></i></div>
+        </div>
+    </div>
+    <div id="box" class="box">
+        <!-- Left box -->
+        <div class="left-box">
+            <div class="left-tools">
+                <div id="home-path">
+                    << home</div> <div id="back-path">
+                        < back</div> </div> <div class="app-disk-label"><i id="disks-refresh" class="icon-arrows-cw refresh"></i>
+                            Drives List
+                </div>
+                <div id="app-disk">
+                    <ul></ul>
+                </div>
+            </div>
+            <!-- Right box -->
+            <div class="right-box">
+                <div id="current-path"></div>
+                <div id="file-list">
+                    <ul></ul>
+                </div>
+            </div>
+        </div>
+        <div id="info-slide"></div>
+
+        <div id="ytdl-container" class="ytdl-container-deActive">
+            <div class="ytdl">
+                <div id="close-ytdl"><i class="icon-cancel-circle"></i></div>
+                <h2><span style="color: orangered">YouTube</span> Downloader</h2>
+                <input id="url" type="text" placeholder="http://">
+                <input id="ytdl_title" type="text" placeholder="= ^ w ^ =">
+                <!-- TODO: Queue of links to download -->
+                <div class="radioAndBtn">
+                    <button id="downloadButton" class="deActiveBtn">
+                        <h3>Wprowadź link</h3>
+                    </button>
+                    <form id="ytdl_RadioForm">
+                        <div class="radioLabel" >
+                            <input type="radio" id="radio_mp3" name="ytd_radio" value="mp3" checked>
+                            <label class="radioLabel" for="radio_mp3"> Muzyka</label>
+                        </div>
+                        <div class="radioLabel" >
+                            <input type="radio" id="radio_mp4" name="ytd_radio" value="mp4">
+                            <label for="radio_mp4"> Wideo</label>
+                        </div>
+                    </form>
+                </div>
+                <img id="downloadPic" class="downloadPicDeActive" src="./assets/load.gif">
+            </div>
+        </div>
+
+        <script src="js-func.js"></script>
+        <script>
+            var YTD_radio = document.getElementsByName('ytd_radio');
+            console.log(YTD_radio);
+            YTD_radio.forEach(radio => {
+                    radio.addEventListener('click', (e) => {
+                    //console.log("Radio: " + e.target.value);
+                    setYTD_Radio(e.target.value);
+                });
+            });
+
+            // ------------ movement vv
+            // get disks
+            getDiskList();
+            diskRefresh.addEventListener('click', () => {
+                addInfoSlide('Refresh list of drives.');
+                getDiskList
+            });
+
+            var ev;
+            // Change dir or open
+            ulList.addEventListener('contextmenu', (e) => {
+                ev = e;
+                aminate_slider([['icon-help', 'Info', infoFuncEvent], ['icon-minus-circle', 'Usuń', deleteFile]]);
+                setTriggerToDelete(e.target.textContent);
+            });
+            ulList.addEventListener('click', (e) => {
+                var newElement = e.target.textContent;
+                if (newElement != '') {
+                    try {
+                        if (fs.lstatSync(path + newElement).isDirectory()) {
+                            pathTable.push(newElement);
+                            path = pathbuilder('current');
+                            document.querySelector('#current-path').innerHTML = path;
+                            getDir(path);
+                        }
+                    } catch (err) {
+                        alert('Brak dostępu!');
+                    }
+                }
+            });
+
+            document.querySelector('#url').addEventListener('contextmenu', () => {
+                const { clipboard } = require('electron')
+                document.querySelector('#url').value = clipboard.readText();
+                ytdl_linkCheck(document.querySelector('#url').value);
+            });
+
+            document.querySelector('#url').addEventListener('change', () => {
+                ytdl_linkCheck(document.querySelector('#url').value);
+            });
+
+            document.querySelector('#ytdl_title').addEventListener('change', () => {
+                ytdl_nameChange(document.querySelector('#ytdl_title').value);
+            });
+
+            document.querySelector('#close-ytdl').addEventListener('click', () => {
+                yt_downloader_hide();
+            });
+
+            document.querySelector('#downloadButton').addEventListener('click', (e) => {
+                if (document.querySelector('#url').value != "") {
+                    yt_downloader_btn(document.querySelector('#url').value);
+                } else {
+                    console.log("Nieprawidowy link.");
+                }
+            });
+
+            document.querySelector('#app-disk ul').addEventListener('click', (e) => {
+                var newPath = e.target.textContent;
+                try {
+                    pathTable = [];
+                    pathTable.push(newPath);
+                    path = newPath;
+                    getDir(path);
+                } catch (err) {
+                    alert('Brak dostępu!');
+                }
+            });
+
+            // Back path
+            document.querySelector('#back-path').addEventListener('click', () => {
+                path = pathbuilder('back');
+                getDir(path);
+            });
+
+            // Home path
+            document.querySelector('#home-path').addEventListener('click', () => {
+                path = pathbuilder('home');
+                getDir(path);
+            });
+
+            // ------------ move ^^
+
+            // ------------ App window action vv
+            // Exit
+            document.querySelector('#app-close').addEventListener('click', closeApp);
+            // max and min window size
+            document.querySelector('#app-max').addEventListener('click', minmax);
+            // hide window
+            document.querySelector('#app-hidde').addEventListener('click', hiddeWindow);
+            // ------------ App window action ^^
+
+            // Left Settings Slider Action
+            document.querySelector('#app-menu').addEventListener('click', aminate_slider);
+            
+        </script>
+</body>
+
+</html>
