@@ -306,10 +306,11 @@ input[type="text"] {
     position:       absolute;
     opacity:        0;
     height:         130px;
-    width:          auto;
+    width:          130px;
     margin-top:     400px;
     border-radius:  180px;
     transition:     all 1000ms;
+    background:   #2c2f33;
 }
 
 .downloadPicActive{

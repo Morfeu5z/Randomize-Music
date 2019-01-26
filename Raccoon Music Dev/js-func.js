@@ -15,6 +15,9 @@ var clickedMenuBox = false; //left slider
 var doAnimation = false; // left slider animation
 var pathTable = []; // Starter path on windows
 var path = '';
+var loadpicPath = __dirname;
+var ffmpegPath = '';
+var loadpicTable = [];
 
 /** YTD controllers **/
 var newTitle = '';
@@ -22,12 +25,44 @@ var downloadBtnName = 'Pobierz MP3';
 var downloadAudio = true;
 var videoID;
 var activeYTDL = false;
+var RadioBtnStop = true;
 var downloadActive = false;
 var downloadSuccess = false;
 
 
+/** -----------------------External source---------------------- **/
+var loadpicPathTable = loadpicPath.split('\\');
+// console.log(loadpicPathTable);
+loadpicPath = '';
+for(var j = 0; j < loadpicPathTable.length - 2; j++){
+    loadpicPath = loadpicPath + loadpicPathTable[j] + '\\';
+}
+ffmpegPath = loadpicPath + 'adds\\ffmpeg.exe';
+loadpicPath = loadpicPath + 'adds\\loadpic';
+// console.log(loadpicPath);
 
-/** -----------------------App ---------------------- **/
+/** -----------------------Pic Load Table---------------------- **/
+if(!fs.existsSync(loadpicPath)){
+    var loadpicPath = __dirname + '\\assets\\loadpic';
+}
+fs.readdirSync(loadpicPath).forEach(load => {
+    try {
+        if(load.slice(0,9) === 'ytdl_load' 
+        || load.slice(-3,load.length) === '.gif'
+        || load.slice(-3,load.length) === '.png'
+        || load.slice(-3,load.length) === '.jpg'
+        || load.slice(-4,load.length) === '.jpeg'
+        || load.slice(-3,load.length) === '.svg'){
+            loadpicTable.push(load);
+        }
+    } catch (error) {
+        //        
+    }
+});
+
+// console.log(loadpicTable);
+
+/** -----------------------App----------------------- **/
 function closeApp() {
     if(downloadActive){
         if (!confirm("Trwa pobieranie z YouTube, napewno chcesz zamknąć program?")) {
@@ -68,13 +103,13 @@ function getDiskList() {
                 newDisk.appendChild(newLabel);
                 ulDisk.appendChild(newDisk);
                 
-                console.log('Disk: ' + tmpPath);
+                // console.log('Disk: ' + tmpPath);
             }   
         } catch (error) {
             //            
         }
     }
-    console.log('Disks: ' + DiscTable);
+    // console.log('Disks: ' + DiscTable);
     pathTable = [];
     pathTable.push(DiscTable[0] + ':\\');
     path = pathbuilder('current');
@@ -240,7 +275,13 @@ function yt_downloader_hide() {
 function ytdl_nameChange(name){
     newTitle = titleStandarization(name);
     console.log(newTitle);
-    ytd_panel_mode('mp3mp4');
+    if(newTitle === ''){
+        ytd_panel_mode('reset', false);
+    }
+    else
+    {
+        ytd_panel_mode('mp3mp4');
+    }
 }
 
 /** check the correctness of url and title
@@ -255,6 +296,9 @@ function ytdl_linkCheck(url) {
                 console.log(info);
                 newTitle = titleStandarization(info.title);
                 ytd_panel_mode('linkAccept');
+                var los = Math.floor(Math.random() * loadpicTable.length);
+                // console.log(loadpicPath + loadpicTable[los]);
+                document.querySelector('#downloadPic').src = loadpicPath + '\\' + loadpicTable[los];
             });
         } catch (error) {
             ytd_panel_mode('linkError');
@@ -267,7 +311,7 @@ function ytdl_linkCheck(url) {
  */
 function setYTD_Radio(format){
     // console.log(format);
-    if(downloadActive === false){
+    if(RadioBtnStop === false){
         switch(format){
             case 'mp3':
                 downloadBtnName = 'Pobierz MP3';
@@ -283,6 +327,8 @@ function setYTD_Radio(format){
         }
     }
 }
+
+
 
 /** Active or deactive radio buttons
  * mode: active, deactive
@@ -305,6 +351,11 @@ function radioBtnMode(mode){
     }    
 }
 
+
+/** Radio btn block */
+RadioBtnStop = true;
+radioBtnMode('deactive');
+
 /** Download Audio or Video
  * FIXME: It's definitly not best video quality, for that I need converting with ffmpeg used
  * @param {*} url 
@@ -318,7 +369,7 @@ function yt_downloader_btn(url) {
         yt_downloader(url, 'mp3');
     }else{
         // videoID = ytdl(url, { filter: 'audioandvideo', quality: 'highest' });
-        videoID = ytdl(url, { quality: 'highest'});
+        videoID = ytdl(url, {filter: (format) => format.container === 'mp4'});
         yt_downloader(url, 'mp4');
     }
 }
@@ -329,10 +380,13 @@ function yt_downloader_btn(url) {
 function yt_downloader(url, ext='') {
     if (activeYTDL && downloadActive == false) {
         if (path == "C:\\") {
-            addInfoSlide("Należy wskazać folder docelowy!", 'error', 10000);
+            addInfoSlide("Na dysku C:\\ należy wskazać folder docelowy!", 'error', 10000);
         } else {
             // Blocking script if downloading is active
             activeYTDL = false;
+            // Radio btn block
+            RadioBtnStop = true;
+            radioBtnMode('deactive');
             newTitle = titleStandarization(newTitle);
             var filePointer = path + newTitle + '.mp4';
             
@@ -357,7 +411,7 @@ function yt_downloader(url, ext='') {
                         var ffmpeg = require('fluent-ffmpeg');
                         var proc = new ffmpeg({ source: filePointer, nolog: true })
                         if(os.platform() === 'win32'){
-                            proc.setFfmpegPath("./assets/ffmpeg.exe");
+                            proc.setFfmpegPath(ffmpegPath);
                         }else{
                             return 0;// change it for linux
                         }
@@ -379,17 +433,19 @@ function yt_downloader(url, ext='') {
                             ytd_panel_mode('success');
                             console.log('File has been converted successfully');
                             addInfoSlide("Konwertowanie do "+ext+" zakończone.");
+                            fs.unlinkSync(filePointer);
                         });
-
+                        
                         proc.on('error', function(err) {
                             console.log('An error happened: ' + err.message);
                             addInfoSlide("Blad podczas konwertowania!", 'error');
                             ytd_panel_mode('success');
                         });
                         
+                        
                         // save to file <-- the new file I want -->
-                        filePointer = filePointer.slice(0, -3);
-                        proc.saveToFile(filePointer + ext);
+                        var newfilePointer = filePointer.slice(0, -3);
+                        proc.saveToFile(newfilePointer + ext);
                         
                     } catch (e) {
                         console.log("Converting error");
@@ -471,7 +527,7 @@ function titleStandarization(title = 'tmp') {
  * mode: 'success', 'start', 'reset'
  * @param {ytd panel mode} mode 
  */
-function ytd_panel_mode(mode) {
+function ytd_panel_mode(mode, message = true) {
     switch (mode) {
         case 'mp3mp4':
             if(downloadSuccess){
@@ -485,52 +541,69 @@ function ytd_panel_mode(mode) {
 
         case 'reset':
             document.querySelector('#url').value = '';
+            document.querySelector('#downloadButton').classList.remove("activeBtn");
             document.querySelector('#downloadButton').classList.remove("successBtn");
             document.querySelector('#downloadButton h3').textContent = "Wprowadź link";
             document.querySelector('#ytdl_title').value = '';
             document.querySelector('#url').disabled = false;
             document.querySelector('#ytdl_title').disabled = false;
+            // Radio btn block
+            RadioBtnStop = true;
+            radioBtnMode('deactive');
+            newTitle = '';
             getDir(path);
             break;
             
         case 'success':
             console.log("Download Complete");
-            addInfoSlide("Pobieranie zakończone");
+            if(message) addInfoSlide("Pobieranie zakończone");
             document.querySelector('#downloadButton h3').textContent = "Clear!";
             document.querySelector('#downloadButton').classList.remove("activeBtn");
             document.querySelector('#downloadButton').classList.add("successBtn");
             document.querySelector('#downloadPic').classList.remove("downloadPicActive");
             downloadActive = false;
             downloadSuccess = true;
+            // Radio btn noblock
+            RadioBtnStop = false;
             radioBtnMode('active');
             getDir(path);
             break;
             
         case 'start':
             console.log("Pobieranie!");
-            addInfoSlide("Rozpoczynam pobieranie");
+            if(message) addInfoSlide("Rozpoczynam pobieranie");
             document.querySelector('#downloadPic').classList.add("downloadPicActive");
             downloadActive = true;
             radioBtnMode('deactive');
             document.querySelector('#ytdl_title').disabled = true;
             document.querySelector('#url').disabled = true;
             getDir(path);
+            // Radio btn block
+            RadioBtnStop = true;
+            radioBtnMode('deactive');
             break;
 
         case 'linkError':
             console.log("Link error.");
-            addInfoSlide("Nieprawidowy link!", 'error');
+            if(message) addInfoSlide("Nieprawidowy link!", 'error');
             document.querySelector('#downloadButton').classList.remove("activeBtn");
             document.querySelector('#downloadButton h3').textContent = "Wprowadź link";
             document.querySelector('#ytdl_title').textContent = "Nieprawidowy link!";
+           
+            // Radio btn block
+            RadioBtnStop = true;
+            radioBtnMode('deactive');
             break;
 
         case 'linkAccept':
             document.querySelector('#ytdl_title').value = newTitle;
             document.querySelector('#downloadButton').classList.add("activeBtn");
             document.querySelector('#downloadButton h3').textContent = downloadBtnName;
-            addInfoSlide("Gotowe do pobrania.");
+            if(message) addInfoSlide("Gotowe do pobrania.");
             activeYTDL = true;
+            // Radio btn block
+            RadioBtnStop = false;
+            radioBtnMode('active');
             break;
     }
 }
@@ -574,7 +647,7 @@ function deleteFile() {
             getDir(path);
         } catch (error) {
             console.log("Delete error!");
-            addInfoSlide("Wystąpil problem podczas usuwania!", 'error');
+            addInfoSlide("Wystąpil problem. Plik jest prawdopodobnie używany przez inny program!", 'error');
             getDir(path);
         }
     } catch (error) {
