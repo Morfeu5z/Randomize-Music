@@ -57,7 +57,7 @@ const mainMenuTemplate = [
         submenu:[
             {
                 label: 'Dev Tools',
-                //accelerator: process.platform == 'darwin' ? 'Command+I' : 'Ctrl+I',
+                accelerator: process.platform == 'darwin' ? 'Command+I' : 'Ctrl+I',
                 click(item, focusedWindow){
                     focusedWindow.toggleDevTools();
                 }

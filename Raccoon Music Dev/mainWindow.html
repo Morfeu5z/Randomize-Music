@@ -73,30 +73,35 @@
 
         <script src="js-func.js"></script>
         <script>
+            // Variables
+            var ev;
             var YTD_radio = document.getElementsByName('ytd_radio');
-            console.log(YTD_radio);
+
+            // ytdl music/video radio btn 
             YTD_radio.forEach(radio => {
                     radio.addEventListener('click', (e) => {
-                    //console.log("Radio: " + e.target.value);
                     setYTD_Radio(e.target.value);
                 });
             });
 
             // ------------ movement vv
-            // get disks
+            // Create disks list
             getDiskList();
+
+            // Refresh disks list
             diskRefresh.addEventListener('click', () => {
                 addInfoSlide('Refresh list of drives.');
-                getDiskList
+                getDiskList();
             });
 
-            var ev;
-            // Change dir or open
+            // Add delete btn on slider for ul elemet
             ulList.addEventListener('contextmenu', (e) => {
                 ev = e;
                 aminate_slider([['icon-help', 'Info', infoFuncEvent], ['icon-minus-circle', 'Usuń', deleteFile]]);
                 setTriggerToDelete(e.target.textContent);
             });
+
+            // Directory Movement 
             ulList.addEventListener('click', (e) => {
                 var newElement = e.target.textContent;
                 if (newElement != '') {
@@ -113,24 +118,29 @@
                 }
             });
 
+            // PPM paste url
             document.querySelector('#url').addEventListener('contextmenu', () => {
                 const { clipboard } = require('electron')
                 document.querySelector('#url').value = clipboard.readText();
                 ytdl_linkCheck(document.querySelector('#url').value);
             });
 
+            // Check ytdl link on url change
             document.querySelector('#url').addEventListener('change', () => {
                 ytdl_linkCheck(document.querySelector('#url').value);
             });
 
+            // Check ytdl title on change
             document.querySelector('#ytdl_title').addEventListener('change', () => {
                 ytdl_nameChange(document.querySelector('#ytdl_title').value);
             });
 
+            // Hide ytdl window
             document.querySelector('#close-ytdl').addEventListener('click', () => {
                 yt_downloader_hide();
             });
 
+            // Download btn action
             document.querySelector('#downloadButton').addEventListener('click', (e) => {
                 if (document.querySelector('#url').value != "") {
                     yt_downloader_btn(document.querySelector('#url').value);
@@ -139,6 +149,7 @@
                 }
             });
 
+            // Change current disk
             document.querySelector('#app-disk ul').addEventListener('click', (e) => {
                 var newPath = e.target.textContent;
                 try {

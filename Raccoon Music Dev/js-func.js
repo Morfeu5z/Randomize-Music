@@ -1,13 +1,10 @@
-// Get drives list
-localStorage.setItem('DiskLoop', 0);
-
 /** Electron imports **/
 const electron = require('electron');
 const { remote, ipcRenderer } = require('electron');
 const popmotion = require('popmotion');
 const fs = require('fs');
-const diskInfo = require('diskinfo');
 const ytdl = require('ytdl-core');
+const os = require('os'); 
 
 /** FM Comtrollers **/
 const ulList = document.querySelector('#file-list ul');
@@ -55,25 +52,33 @@ function hiddeWindow() {
 
 /** -----------------------File Manager---------------------- **/
 /** Create list of disks 
- *  FIXME: On real, it is not working xD, disklist is static
+ *  FIXME: For now, only windows disk scaner
 */
 function getDiskList() {
     ulDisk.innerHTML = '';
-    diskInfo.getDrives((err, drives) => {
-        // console.log(drives.length);
-        for (var i = (!localStorage.getItem('DiskLoop') ? 0 : localStorage.getItem('DiskLoop')); i < drives.length; i++) {
-            var newDisk = document.createElement('li');
-            var newLabel = document.createTextNode(drives[i].mounted + '\\');
-            newDisk.appendChild(newLabel);
-            ulDisk.appendChild(newDisk);
+    var DiscTable = [];
+    for(var i = 65; i < 91; i++){
+        var tmpPath = String.fromCharCode(i) + ':\\';
+        try {
+            if(fs.readdirSync(tmpPath) != null){
+                
+                DiscTable.push(String.fromCharCode(i));
+                var newDisk = document.createElement('li');
+                var newLabel = document.createTextNode(tmpPath);
+                newDisk.appendChild(newLabel);
+                ulDisk.appendChild(newDisk);
+                
+                console.log('Disk: ' + tmpPath);
+            }   
+        } catch (error) {
+            //            
         }
-        localStorage.setItem('DiskLoop', drives.length);
-        pathTable = [];
-        pathTable.push(drives[0].mounted + '\\');
-        path = pathbuilder('current');
-        // Get actualy dirs and files
-        getDir(path);
-    });
+    }
+    console.log('Disks: ' + DiscTable);
+    pathTable = [];
+    pathTable.push(DiscTable[0] + ':\\');
+    path = pathbuilder('current');
+    getDir(path);
 }
 
 /** Path maker
@@ -118,11 +123,14 @@ function getDir(path) {
     // console.log(files);
     files.forEach(element => {
         //console.log(element.slice(-4, -1));
-        if (element[0] != "$" && element.slice(-4, -1) != ".sy" && element.slice(-4, -1) != ".Ms") {
-            newli = document.createElement('li'); // new li element
-            newtxt = document.createTextNode(element); // add file or dir name
-            newli.appendChild(newtxt);
-            ulList.appendChild(newli); // add to ul
+        if (element[0] != "$" 
+            && element.slice(-4, -1) != ".sy" 
+            && element.slice(-4, -1) != ".Ms" 
+            && element != 'System Volume Information') {
+                newli = document.createElement('li'); // new li element
+                newtxt = document.createTextNode(element); // add file or dir name
+                newli.appendChild(newtxt);
+                ulList.appendChild(newli); // add to ul
         }
     });
     // console.log(newlist);
@@ -298,26 +306,27 @@ function radioBtnMode(mode){
 }
 
 /** Download Audio or Video
- * FIXME: It's definitly not best quality, for that I need converting with ffmpeg used
+ * FIXME: It's definitly not best video quality, for that I need converting with ffmpeg used
  * @param {*} url 
  */
 function yt_downloader_btn(url) {
     if(downloadAudio){
-        /** best audio */
-        videoID = ytdl(url, {filter: 'audioonly', quality: 'highestaudio'});
-        // videoID = ytdl(url, {filter: (format) => format.container === 'mp4'});
-        yt_downloader(url, '.mp3');
+        /** best audio? */
+        // videoID = ytdl(url, {filter: (format) => format.itag === '140'});
+        // videoID = ytdl(url, { quality: 'highest'});
+        videoID = ytdl(url, {filter: (format) => format.container === 'mp4'});
+        yt_downloader(url, 'mp3');
     }else{
         // videoID = ytdl(url, { filter: 'audioandvideo', quality: 'highest' });
         videoID = ytdl(url, { quality: 'highest'});
-        yt_downloader(url, '.mp4');
+        yt_downloader(url, 'mp4');
     }
 }
 
 /** YouTube Downloader Script
  * @param {*} url 
  */
-function yt_downloader(url, ext='.mp3') {
+function yt_downloader(url, ext='') {
     if (activeYTDL && downloadActive == false) {
         if (path == "C:\\") {
             addInfoSlide("Należy wskazać folder docelowy!", 'error', 10000);
@@ -325,10 +334,11 @@ function yt_downloader(url, ext='.mp3') {
             // Blocking script if downloading is active
             activeYTDL = false;
             newTitle = titleStandarization(newTitle);
+            var filePointer = path + newTitle + '.mp4';
+            
             ytdl.getInfo(ytdl.getURLVideoID(url), (err, info) => {
                 if (err) throw err;
                 /** TODO: Set Start and End point of music (cut) */
-                var filePointer = path + newTitle + ext;
                 // console.log("Path: " + filePointer);
                 videoID.pipe(fs.createWriteStream(filePointer));
             
@@ -339,10 +349,56 @@ function yt_downloader(url, ext='.mp3') {
                 console.log("Progress...");
                 document.querySelector('#downloadButton h3').textContent = "Pobieranie: " + ile++;
             })
-
+            
             videoID.on("end", () => {
-                ytd_panel_mode('success');
-                /** TODO: Copy meat data to mp3 */
+                console.log("Download complete!");
+                if(ext === 'mp3'){
+                    try {
+                        var ffmpeg = require('fluent-ffmpeg');
+                        var proc = new ffmpeg({ source: filePointer, nolog: true })
+                        if(os.platform() === 'win32'){
+                            proc.setFfmpegPath("./assets/ffmpeg.exe");
+                        }else{
+                            return 0;// change it for linux
+                        }
+                        
+                        proc.toFormat(ext);
+                        
+                        proc.on('start', function() {
+                            addInfoSlide("Rozpoczynam konwertowanie do "+ext);
+                            console.log('Start converting.');
+                        });
+                        
+                        var ile = 0;
+                        proc.on('progress', function() {
+                            console.log("Converting progress...");
+                            document.querySelector('#downloadButton h3').textContent = "Konvertowanie: " + ile++;
+                        });
+                        
+                        proc.on('end', function() {
+                            ytd_panel_mode('success');
+                            console.log('File has been converted successfully');
+                            addInfoSlide("Konwertowanie do "+ext+" zakończone.");
+                        });
+
+                        proc.on('error', function(err) {
+                            console.log('An error happened: ' + err.message);
+                            addInfoSlide("Blad podczas konwertowania!", 'error');
+                            ytd_panel_mode('success');
+                        });
+                        
+                        // save to file <-- the new file I want -->
+                        filePointer = filePointer.slice(0, -3);
+                        proc.saveToFile(filePointer + ext);
+                        
+                    } catch (e) {
+                        console.log("Converting error");
+                        addInfoSlide("Blad podczas konwertowania!", 'error');
+                        ytd_panel_mode('success');
+                    }
+                }else{
+                    ytd_panel_mode('success');
+                }
             })
         }
     } else if (downloadSuccess) ytd_panel_mode('reset');
@@ -352,7 +408,7 @@ function yt_downloader(url, ext='.mp3') {
  * @param {string} title 
  */
 function titleStandarization(title = 'tmp') {
-    var omv = 'Official';
+    var omv = ['Official', 'official'];
     var sliceEnd = title.length;
     if (title.length > 60) sliceEnd = 60;
     title = title.slice(0, sliceEnd);
@@ -360,7 +416,7 @@ function titleStandarization(title = 'tmp') {
     for (var i = 0; i < title.length; i++) {
         var error = 0;
         //console.log(title.slice(i, i+9));
-        if (title.slice(i, i + 8) == omv) {
+        if (title.slice(i, i + 8) == omv[0] || title.slice(i, i + 8) == omv[1]) {
             if (title[i - 2] != ' ') {
                 title = title.slice(0, i - 1);
             } else {
@@ -422,8 +478,6 @@ function ytd_panel_mode(mode) {
                 document.querySelector('#downloadButton').classList.remove("successBtn");
                 downloadSuccess = false;
             }
-            /** FIXME: Not change btn name if link incorrect and wait to check */
-            /** FIXME: Something crash after build */
             if(activeYTDL)document.querySelector('#downloadButton h3').textContent = downloadBtnName;
             document.querySelector('#ytdl_title').disabled = false;
             ytd_panel_mode('linkAccept');
@@ -436,6 +490,7 @@ function ytd_panel_mode(mode) {
             document.querySelector('#ytdl_title').value = '';
             document.querySelector('#url').disabled = false;
             document.querySelector('#ytdl_title').disabled = false;
+            getDir(path);
             break;
             
         case 'success':
@@ -448,6 +503,7 @@ function ytd_panel_mode(mode) {
             downloadActive = false;
             downloadSuccess = true;
             radioBtnMode('active');
+            getDir(path);
             break;
             
         case 'start':
@@ -455,10 +511,10 @@ function ytd_panel_mode(mode) {
             addInfoSlide("Rozpoczynam pobieranie");
             document.querySelector('#downloadPic').classList.add("downloadPicActive");
             downloadActive = true;
-            getDir(path);
             radioBtnMode('deactive');
             document.querySelector('#ytdl_title').disabled = true;
             document.querySelector('#url').disabled = true;
+            getDir(path);
             break;
 
         case 'linkError':
@@ -555,7 +611,6 @@ function infoFuncEvent(e) {
     // console.log(ev.target.textContent);
 }
 
-/** TODO:  */
 /** Left menu maker (slider) */
 function aminate_slider(btnList = []) {
     dur = 250;
