@@ -41,9 +41,12 @@ ffmpegPath = loadpicPath + 'adds\\ffmpeg.exe';
 loadpicPath = loadpicPath + 'adds\\loadpic';
 // console.log(loadpicPath);
 
+
+
 /** -----------------------Pic Load Table---------------------- **/
 if(!fs.existsSync(loadpicPath)){
     var loadpicPath = __dirname + '\\assets\\loadpic';
+    ffmpegPath = '..\\adds\\ffmpeg.exe';
 }
 fs.readdirSync(loadpicPath).forEach(load => {
     try {
@@ -362,14 +365,17 @@ radioBtnMode('deactive');
  */
 function yt_downloader_btn(url) {
     if(downloadAudio){
-        /** best audio? */
         // videoID = ytdl(url, {filter: (format) => format.itag === '140'});
+        // videoID = ytdl(url, {filter: (format) => format.container === 'mp4'});
         // videoID = ytdl(url, { quality: 'highest'});
-        videoID = ytdl(url, {filter: (format) => format.container === 'mp4'});
+        // videoID = ytdl(url, {filter: (format) => format.itag === '251'});
+        /** best avalible yt audio */
+        videoID = ytdl(url, {quality: 'highestaudio'});
         yt_downloader(url, 'mp3');
     }else{
         // videoID = ytdl(url, { filter: 'audioandvideo', quality: 'highest' });
-        videoID = ytdl(url, {filter: (format) => format.container === 'mp4'});
+        // videoID = ytdl(url, {filter: (format) => format.container === 'mp4'});
+        videoID = ytdl(url, {quality: 'highest'});
         yt_downloader(url, 'mp4');
     }
 }
@@ -388,8 +394,9 @@ function yt_downloader(url, ext='') {
             RadioBtnStop = true;
             radioBtnMode('deactive');
             newTitle = titleStandarization(newTitle);
-            var filePointer = path + newTitle + '.mp4';
-            
+            var filePointer = path + newTitle;
+            if(ext==='mp4') filePointer = filePointer + '.mp4';
+
             ytdl.getInfo(ytdl.getURLVideoID(url), (err, info) => {
                 if (err) throw err;
                 /** TODO: Set Start and End point of music (cut) */
@@ -439,13 +446,14 @@ function yt_downloader(url, ext='') {
                         proc.on('error', function(err) {
                             console.log('An error happened: ' + err.message);
                             addInfoSlide("Blad podczas konwertowania!", 'error');
-                            ytd_panel_mode('success');
+                            ytd_panel_mode('success', false);
                         });
                         
                         
                         // save to file <-- the new file I want -->
-                        var newfilePointer = filePointer.slice(0, -3);
-                        proc.saveToFile(newfilePointer + ext);
+                        // var newfilePointer = filePointer.slice(0, -3);
+                        // proc.saveToFile(newfilePointer + ext);
+                        proc.saveToFile(filePointer + '.' + ext);
                         
                     } catch (e) {
                         console.log("Converting error");
@@ -453,6 +461,7 @@ function yt_downloader(url, ext='') {
                         ytd_panel_mode('success');
                     }
                 }else{
+                    
                     ytd_panel_mode('success');
                 }
             })
